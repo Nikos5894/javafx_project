@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.geometry.Insets?>
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.toursystem.ViewToursController" spacing="10" >
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+    <Label text="Список екскурсій" style="-fx-font-size: 16px;"/>
+    <TableView fx:id="toursTable">
+        <columns>
+            <TableColumn text="ID" fx:id="idColumn" prefWidth="50"/>
+            <TableColumn text="Назва" fx:id="nameColumn" prefWidth="150"/>
+            <TableColumn text="Опис" fx:id="descriptionColumn" prefWidth="200"/>
+            <TableColumn text="Дата" fx:id="dateColumn" prefWidth="100"/>
+            <TableColumn text="Час" fx:id="timeColumn" prefWidth="100"/>
+            <TableColumn text="Доступність" fx:id="accessibilityColumn" prefWidth="150"/>
+        </columns>
+    </TableView>
+    <HBox spacing="10">
+        <Button text="Редагувати" onAction="#onEdit"/>
+        <Button text="Видалити" onAction="#onDelete"/>
+        <Button text="Закрити" onAction="#onClose"/>
+    </HBox>
+</VBox>

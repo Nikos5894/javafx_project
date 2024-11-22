@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.collections.FXCollections?>
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.toursystem.AddTourController" spacing="10" >
+    <padding>
+        <Insets top="10" right="10" bottom="10" left="10"/>
+    </padding>
+    <Label text="Додати нову екскурсію" style="-fx-font-size: 16px;"/>
+    <TextField fx:id="nameField" promptText="Назва екскурсії"/>
+    <TextArea fx:id="descriptionField" promptText="Опис екскурсії" prefHeight="100"/>
+    <DatePicker fx:id="datePicker"/>
+    <ComboBox fx:id="timeComboBox">
+        <items>
+            <FXCollections fx:factory="observableArrayList">
+                <String fx:value="10:00"/>
+                <String fx:value="12:00"/>
+                <String fx:value="14:00"/>
+                <String fx:value="16:00"/>
+            </FXCollections>
+        </items>
+    </ComboBox>
+    <ComboBox fx:id="accessibilityComboBox" promptText="Доступність">
+        <items>
+            <FXCollections fx:factory="observableArrayList">
+                <String fx:value="Доступно для всіх"/>
+                <String fx:value="Без бар’єрів"/>
+                <String fx:value="Спеціальні умови"/>
+            </FXCollections>
+        </items>
+    </ComboBox>
+    <Button text="Зберегти" onAction="#onSave"/>
+    <Button text="Назад" onAction="#onCancel"/>
+</VBox>

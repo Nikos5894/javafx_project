@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.toursystem.MainController">
+    <top>
+        <MenuBar>
+            <menus>
+                <Menu text="Файл">
+                    <MenuItem text="Вихід" onAction="#onExit"/>
+                </Menu>
+                <Menu text="Екскурсії">
+                    <MenuItem text="Перегляд екскурсій" onAction="#onViewTours"/>
+                    <MenuItem text="Додати екскурсію" onAction="#onAddTour"/>
+                </Menu>
+                <Menu text="Функції">
+                    <MenuItem text="Відобразити карту" onAction="#onViewMap"/>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
+    <center>
+        <Label text="Ласкаво просимо до системи управління екскурсіями!" style="-fx-font-size: 16px;"/>
+    </center>
+    <Button text="Відкрити карту" onAction="#onViewMap"/>
+</BorderPane>

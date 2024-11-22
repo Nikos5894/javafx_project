@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.web.WebView?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.TextField?>
+<VBox xmlns:fx="http://javafx.com/fxml" fx:controller="com.example.toursystem.MapViewController">
+    <WebView fx:id="mapView" VBox.vgrow="ALWAYS"/>
+    <Button text="Зберегти маршрут" onAction="#onSaveRoute" />
+    <TextField fx:id="latitudeField" promptText="Широта" />
+    <TextField fx:id="longitudeField" promptText="Довгота" />
+    <Button text="Отримати адресу" onAction="#onReverseGeocode" />
+    <Button text="Завантажити маршрут" onAction="#onLoadRoute" />
+    <TextField fx:id="routeIdField" promptText="ID маршруту" />
+
+
+</VBox>
