@@ -54,6 +54,7 @@ public class MainController {
     private void onViewMap(ActionEvent event) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/toursystem/MapView.fxml"));
+            System.out.println(getClass().getResource("/com/example/toursystem/MapView.fxml"));
             Stage stage = new Stage();
             stage.setScene(new Scene(loader.load()));
             stage.setTitle("Карта екскурсій");

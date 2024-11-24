@@ -1,10 +1,12 @@
 package com.example.toursystem;
 
+import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.scene.layout.VBox;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.scene.control.TextField;
+import netscape.javascript.JSObject;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -12,6 +14,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.example.toursystem.DatabaseManager.connect;
 
 public class MapViewController {
 
@@ -46,27 +50,36 @@ public class MapViewController {
 
     @FXML
     private void initialize() {
-        selectedPoints = new ArrayList<>(); // Ініціалізація списку/ Ініціалізація списку точок
+        selectedPoints = new ArrayList<>(); // Ініціалізація списку точок
         WebEngine webEngine = mapView.getEngine();
         String mapHtml = getClass().getResource("/com/example/toursystem/html/map.html").toExternalForm();
+        System.out.println("MapView завантажено: " + mapHtml);
+
         webEngine.load(mapHtml);
 
-        int routeId = DatabaseHandler.addRoute("Маршрут по Києву");
+        webEngine.getLoadWorker().stateProperty().addListener((obs, oldState, newState) -> {
+            if (newState == Worker.State.SUCCEEDED) {
+                System.out.println("HTML карта завантажена");
+                webEngine.executeScript(
+                        "window.javafxBridge = { addPointToRoute: function(lat, lng) { javafxCall.addPointToRoute(lat, lng); } };"
+                );
 
-        webEngine.documentProperty().addListener((obs, oldDoc, newDoc) -> {
-            if (newDoc != null) {
+                // Додаємо обробник кліків тільки один раз
                 webEngine.executeScript(
                         "map.on('click', function(e) {" +
                                 "   var lat = e.latlng.lat;" +
                                 "   var lng = e.latlng.lng;" +
-                                "   javafxBridge.addPointToRoute(lat, lng);" +
+                                "   window.javafxBridge.addPointToRoute(lat, lng);" +
                                 "   L.marker([lat, lng]).addTo(map);" +
                                 "});"
                 );
             }
         });
+
         webEngine.setJavaScriptEnabled(true);
     }
+
+
 
     @FXML
     private TextField routeIdField;
@@ -83,29 +96,51 @@ public class MapViewController {
     }
 
     public void addPointToRoute(double latitude, double longitude) {
-        selectedPoints.add(new double[]{latitude, longitude}); // Додаємо точку до списку
-        System.out.println("Точка додана: [" + latitude + ", " + longitude + "]");
+        boolean exists = false;
+        for (Object obj : selectedPoints) {
+            if (obj instanceof double[]) {
+                double[] point = (double[]) obj;
+                if (point[0] == latitude && point[1] == longitude) {
+                    exists = true;
+                    break;
+                }
+            }
+        }
+        if (!exists) {
+            selectedPoints.add(new double[]{latitude, longitude});
+            System.out.println("Точка додана: [" + latitude + ", " + longitude + "]");
+        } else {
+            System.out.println("Точка вже існує у списку.");
+        }
     }
+
+
 
 
     @FXML
     private void onSaveRoute() {
-    if (currentRouteId == -1) {
-        currentRouteId = DatabaseHandler.addRoute("Новий маршрут"); // Створюємо маршрут
-    }
-    if (selectedPoints.isEmpty()) {
+        if (currentRouteId == -1) {
+            currentRouteId = DatabaseHandler.addRoute("Новий маршрут"); // Створюємо маршрут
+            System.out.println("Новий маршрут створено з ID: " + currentRouteId);
+        }
+
+        if (selectedPoints.isEmpty()) {
             System.out.println("Немає точок для збереження!");
             return;
         }
+
         for (Object obj : selectedPoints) {
             if (obj instanceof double[]) {
                 double[] point = (double[]) obj;
+                // Виклик методу для додавання точок у базу
                 DatabaseHandler.addRoutePoint(currentRouteId, point[0], point[1]);
             }
         }
 
         System.out.println("Маршрут збережено: ID " + currentRouteId);
+
     }
+
 
     @FXML
     private void onSearchAddress() {
@@ -133,7 +168,7 @@ public class MapViewController {
         webEngine.executeScript(script);
     }
     public void loadMarkersFromDatabase() {
-        try (Connection conn = DatabaseManager.connect();
+        try (Connection conn = connect();
              PreparedStatement stmt = conn.prepareStatement("SELECT latitude, longitude, name FROM tours")) {
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
@@ -148,18 +183,39 @@ public class MapViewController {
     }
 
     private void loadRouteOnMap(int routeId) {
-        List<double[]> points = DatabaseHandler.getRoutePoints(routeId); // Отримуємо точки з бази даних
+        List<double[]> points = DatabaseHandler.getRoutePoints(routeId);
+
+        if (points.isEmpty()) {
+            System.out.println("Маршрут порожній. Нічого не завантажено.");
+            return;
+        }
+        System.out.println("Завантаження маршруту з ID: " + routeId);
+        for (double[] point : points) {
+            System.out.println("Точка: " + point[0] + ", " + point[1]);
+        }
 
         WebEngine webEngine = mapView.getEngine();
-        for (double[] point : points) {
-            double latitude = point[0];
-            double longitude = point[1];
+        points.forEach(point -> {
+            if (point.length == 2) { // Перевірка на коректність розміру масиву
+                double latitude = point[0];
+                double longitude = point[1];
 
-            // Додаємо маркер для кожної точки на карті через JavaScript
-            webEngine.executeScript(
-                    String.format("L.marker([%f, %f]).addTo(map);", latitude, longitude)
-            );
-        }
+                if (!Double.isNaN(latitude) && !Double.isNaN(longitude)) { // Перевірка на коректність координат
+                    String script = String.format(
+                            "L.marker([%f, %f]).addTo(map).bindPopup('Точка маршруту: [%f, %f]');",
+                            latitude, longitude, latitude, longitude
+                    );
+                    webEngine.executeScript(script);
+                } else {
+                    System.out.println("Некоректні координати: [" + latitude + ", " + longitude + "]");
+                }
+            }
+        });
+
+        System.out.println("Маршрут завантажено: ID " + routeId);
     }
+
+
+
 
 }

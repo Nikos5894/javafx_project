@@ -4,6 +4,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.toursystem.DatabaseManager.connect;
+
 public class DatabaseHandler {
 
     private static final String DB_URL = "jdbc:sqlite:tours.db";
@@ -51,40 +53,37 @@ public class DatabaseHandler {
     }
 
     public static void addRoutePoint(int routeId, double latitude, double longitude) {
+
         String sql = "INSERT INTO route_points (route_id, latitude, longitude) VALUES (?, ?, ?)";
-        try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, routeId);
-            pstmt.setDouble(2, latitude);
-            pstmt.setDouble(3, longitude);
-
-            pstmt.executeUpdate();
-            System.out.println("Точка додана: [" + latitude + ", " + longitude + "]");
-        } catch (Exception e) {
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, routeId);
+            stmt.setDouble(2, latitude);
+            stmt.setDouble(3, longitude);
+            stmt.executeUpdate();
+            System.out.println("Точка маршруту збережена: Route ID " + routeId + ", [" + latitude + ", " + longitude + "]");
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
 
     // Метод для отримання точок маршруту за ID маршруту
     public static List<double[]> getRoutePoints(int routeId) {
         List<double[]> points = new ArrayList<>();
         String sql = "SELECT latitude, longitude FROM route_points WHERE route_id = ?";
-        try (Connection conn = DriverManager.getConnection(DB_URL);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setInt(1, routeId);
-            ResultSet rs = pstmt.executeQuery();
-
+        try (Connection conn = connect();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, routeId);
+            ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                double latitude = rs.getDouble("latitude");
-                double longitude = rs.getDouble("longitude");
-                points.add(new double[]{latitude, longitude});
+                points.add(new double[]{rs.getDouble("latitude"), rs.getDouble("longitude")});
             }
-
-        } catch (Exception e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
+        System.out.println("Отримано точки маршруту з БД: " + points.size());
         return points;
     }
+
 }
